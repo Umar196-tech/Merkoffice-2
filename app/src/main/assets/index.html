@@ -1,0 +1,69 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>MerkOffice</title>
+<style>
+:root{--navy:#17365d;--blue:#245b9e;--bg:#f2f5fa;--line:#d9e1ec}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#172334}
+header{background:var(--navy);color:white;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+header b{font-size:22px}header small{display:block;color:#dce8f8;margin-top:3px}
+main{padding:10px;max-width:900px;margin:auto}
+.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;box-shadow:0 2px 7px #1723340b}
+input#docname{width:100%;font-size:18px;border:1px solid var(--line);border-radius:8px;padding:11px}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+button,select{border:0;border-radius:8px;padding:10px 12px;background:#e8eef7;color:#17365d;font-weight:600;font-size:13px}
+button.primary{background:var(--blue);color:white}button:active{opacity:.7}
+#tools button{padding:9px 11px;min-width:38px}
+#paper{background:white;min-height:55vh;padding:18px;border:1px solid var(--line);border-radius:10px;outline:none;line-height:1.55;overflow-wrap:anywhere}
+#paper:empty:before{content:'Start writing your document here…';color:#9aa6b2}
+#paper img{max-width:100%}#status{font-size:12px;color:#637083;padding:4px}
+.section-title{font-size:14px;font-weight:bold;color:#17365d;margin:4px 0}
+select{border:1px solid var(--line);background:white}
+#extras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#extras button{background:#f0f4fa;text-align:left}
+footer{text-align:center;color:#718096;font-size:11px;padding:8px}
+@media(min-width:650px){main{padding:18px}#paper{min-height:65vh}}
+</style></head>
+<body>
+<header><div><b>MerkOffice</b><small>Offline document studio</small></div><span>✦</span></header>
+<main>
+<div class="panel"><input id="docname" value="Untitled" aria-label="Document name">
+<div class="row"><button class="primary" onclick="newDoc()">＋ New</button><button onclick="saveDoc()">Save</button><button onclick="Office.list()">Open</button><button onclick="exportDoc()">Export HTML</button><button onclick="shareDoc()">Share</button><button onclick="printDoc()">Print / PDF</button></div></div>
+<div class="panel"><div class="section-title">Formatting</div>
+<div class="row" id="tools">
+<button onclick="cmd('bold')"><b>B</b></button><button onclick="cmd('italic')"><i>I</i></button><button onclick="cmd('underline')"><u>U</u></button><button onclick="cmd('insertUnorderedList')">• List</button><button onclick="cmd('insertOrderedList')">1. List</button><button onclick="cmd('justifyLeft')">⇤</button><button onclick="cmd('justifyCenter')">≡</button><button onclick="cmd('justifyRight')">⇥</button>
+<select onchange="cmd('formatBlock',this.value);this.selectedIndex=0"><option value="">Heading / text</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="p">Paragraph</option></select>
+<select onchange="cmd('fontSize',this.value);this.selectedIndex=0"><option value="">Text size</option><option value="2">Small</option><option value="3">Normal</option><option value="4">Large</option><option value="5">Very large</option><option value="6">Title</option></select>
+<button onclick="insertTable()">Table</button><button onclick="insertDate()">Date</button><button onclick="cmd('undo')">↶ Undo</button><button onclick="cmd('redo')">↷ Redo</button>
+</div></div>
+<div id="paper" contenteditable="true" spellcheck="true"></div>
+<div class="panel"><div class="section-title">Quick tools & templates</div><div id="extras">
+<button onclick="template('letter')">✉ Letter template</button><button onclick="template('invoice')">▤ Invoice template</button><button onclick="template('id')">▣ ID card layout</button><button onclick="template('meeting')">☷ Meeting notes</button><button onclick="template('hausa')">A Hausa sample</button><button onclick="wordCount()">Count words</button><button onclick="calculator()">Calculator</button><button onclick="clearDoc()">Clear page</button>
+</div></div><div id="status">Ready • Works offline on this device</div><footer>Documents are stored locally unless you export or share them.</footer>
+</main>
+<script>
+const paper=document.getElementById('paper'),nameBox=document.getElementById('docname'),statusBox=document.getElementById('status');
+function cmd(c,v=null){paper.focus();document.execCommand(c,false,v)}
+function safeName(){return (nameBox.value.trim()||'Untitled').replace(/[\\/:*?"<>|]/g,'_')}
+function newDoc(){if(paper.innerHTML.trim()&&!confirm('Start a new document? Save your current work first.'))return;paper.innerHTML='';nameBox.value='Untitled';setStatus('New document')}
+function saveDoc(){Office.save(safeName(),paper.innerHTML)}
+function saved(n){setStatus('Saved on this device: '+n)}
+function loadSaved(html,n){paper.innerHTML=html;nameBox.value=n;setStatus('Opened: '+n)}
+function exportDoc(){Office.export(safeName(),paper.innerHTML)}
+function exported(){setStatus('Export complete')}
+function shareDoc(){Office.share(safeName(),paper.innerHTML)}
+function printDoc(){Office.print(safeName(),paper.innerHTML);setStatus('Opening print preview. Choose Save as PDF if available.')}
+function setStatus(s){statusBox.textContent=s}
+function insertTable(){paper.focus();document.execCommand('insertHTML',false,'<table border="1" cellpadding="6" style="border-collapse:collapse;width:100%"><tr><th>Heading</th><th>Details</th></tr><tr><td> </td><td> </td></tr><tr><td> </td><td> </td></tr></table><p><br></p>')}
+function insertDate(){paper.focus();document.execCommand('insertText',false,new Date().toLocaleDateString())}
+function template(t){
+const samples={
+letter:'<h2 style="text-align:center">LETTER</h2><p>Date: __________________</p><p>To: ____________________</p><p>Dear __________________,</p><p>Subject: __________________________</p><p>____________________________________________________________</p><p>Yours faithfully,</p><p>Name: __________________</p>',
+invoice:'<h2 style="text-align:center">INVOICE</h2><p>Business: __________________________</p><p>Invoice No: __________　 Date: __________</p><p>Customer: _________________________</p><table border="1" cellpadding="7" style="border-collapse:collapse;width:100%"><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Total</th></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr></table><p>Subtotal: __________　 Total: __________</p>',
+id:'<div style="border:2px solid #245b9e;border-radius:12px;padding:18px;max-width:420px;margin:auto"><h2 style="text-align:center;color:#17365d">IDENTIFICATION CARD</h2><p style="text-align:center">[Insert photo here]</p><p><b>Full name:</b> ____________________</p><p><b>ID number:</b> ____________________</p><p><b>Department:</b> __________________</p><p><b>Valid until:</b> ___________________</p><p>Signature: ________________________</p></div>',
+meeting:'<h2>MEETING NOTES</h2><p>Date: __________　 Time: __________</p><p>Attendees: ________________________</p><h3>Agenda</h3><ul><li></li><li></li></ul><h3>Discussion</h3><p></p><h3>Action points</h3><ul><li>Task — Person — Due date</li></ul>',
+hausa:'<h2>Takardar rubutu</h2><p>Assalamu alaikum.</p><p>Wannan samfuri ne na rubutu a cikin MerkOffice. Za ka iya gyara shi, ka ajiye shi a wayarka, ko ka fitar da shi.</p>'
+};paper.innerHTML=samples[t];setStatus('Template inserted')}
+function wordCount(){let s=paper.innerText.trim();let n=s?s.split(/\s+/).length:0;alert('Words: '+n+'\nCharacters: '+s.length)}
+function calculator(){let a=prompt('Enter a basic calculation (example: 25*4+10)');if(a===null)return;if(!/^[0-9+\-*/().% ]+$/.test(a)){alert('Only numbers and basic arithmetic operators are allowed.');return}try{let result=Function('"use strict";return ('+a+')')();alert('Result: '+result)}catch(e){alert('Check the calculation.')} }
+function clearDoc(){if(confirm('Clear all text on this page?'))paper.innerHTML=''}
+</script></body></html>
