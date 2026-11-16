@@ -40,7 +40,7 @@ public class MainActivity extends Activity {
         if(files==null||files.length==0){new AlertDialog.Builder(MainActivity.this).setMessage("No saved documents yet.").setPositiveButton("OK",null).show();return;}
         String[] names=new String[files.length]; for(int i=0;i<files.length;i++)names[i]=files[i].getName();
         new AlertDialog.Builder(MainActivity.this).setTitle("Open saved document").setItems(names,(d,which)->{
-          try {String html=new String(java.nio.file.Files.readAllBytes(files[which].toPath()),StandardCharsets.UTF_8);
+          try {ByteArrayOutputStream buffer=new ByteArrayOutputStream(); try(FileInputStream in=new FileInputStream(files[which])){byte[] chunk=new byte[4096];int count;while((count=in.read(chunk))!=-1)buffer.write(chunk,0,count);} String html=new String(buffer.toByteArray(),StandardCharsets.UTF_8);
             web.evaluateJavascript("loadSaved("+JSONObjectQuote(html)+","+JSONObjectQuote(names[which].replaceFirst("\\.html$",""))+")",null);
           }catch(Exception e){fail(e.getMessage());}
         }).setNegativeButton("Cancel",null).show();
